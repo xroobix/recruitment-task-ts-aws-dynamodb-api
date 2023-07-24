@@ -1,0 +1,73 @@
+service: recruitment-task-ts-aws-dynamodb-api
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  profile: serverlessUser
+  region: eu-central-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - "dynamodb:PutItem"
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:Scan"
+          Resource:
+            - { "Fn::GetAtt": ["ProductsTable", "Arn"] }
+
+plugins:
+  - serverless-plugin-typescript
+
+functions:
+  createProduct:
+    handler: src/handlers.createProduct
+    events:
+      - http:
+          path: /products
+          method: post
+  getProduct:
+    handler: src/handlers.getProduct
+    events:
+      - http:
+          path: /products/{productId}
+          method: get
+  updateProduct:
+    handler: src/handlers.updateProduct
+    events:
+      - http:
+          path: /products/{productId}
+          method: put
+  deleteProduct:
+    handler: src/handlers.deleteProduct
+    events:
+      - http:
+          path: /products/{productId}
+          method: delete
+  getProducts:
+    handler: src/handlers.getProducts
+    events:
+      - http:
+          path: /products
+          method: get
+
+resources:
+  Resources:
+    ProductsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ProductsTable
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: productID
+            AttributeType: S
+        KeySchema:
+          - AttributeName: productID
+            KeyType: HASH
+
+configValidationMode: error
